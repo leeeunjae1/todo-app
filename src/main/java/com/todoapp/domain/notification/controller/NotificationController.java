@@ -31,6 +31,7 @@ public class NotificationController {
                 .map(NotificationResponse::new)
                 .collect(Collectors.toList());
         model.addAttribute("notifications", notifications);
+        model.addAttribute("userEmail", user.getEmail()); // WebSocket 구독용
         return "notification/list";
     }
 
