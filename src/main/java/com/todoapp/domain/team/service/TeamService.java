@@ -31,7 +31,6 @@ public class TeamService {
 
         teamRepository.save(team);
 
-        // 팀 생성자를 OWNER로 팀원 추가
         TeamMember teamMember = TeamMember.builder()
                 .team(team)
                 .user(creator)
@@ -43,22 +42,47 @@ public class TeamService {
         return team.getId();
     }
 
-    // 팀원 초대
+    // 팀원 초대 (팀장만 가능)
     @Transactional
-    public void inviteMember(Team team, User user) {
+    public void inviteMember(Team team, User requestUser, User targetUser) {
+
+        // 요청자가 팀장인지 확인
+        TeamMember requestMember = teamMemberRepository.findByTeamAndUser(team, requestUser)
+                .orElseThrow(() -> new IllegalArgumentException("팀원이 아닙니다."));
+
+        if (requestMember.getRole() != TeamMember.TeamRole.OWNER) {
+            throw new IllegalArgumentException("팀장만 팀원을 초대할 수 있습니다.");
+        }
 
         // 이미 팀원인지 체크
-        if (teamMemberRepository.existsByTeamAndUser(team, user)) {
+        if (teamMemberRepository.existsByTeamAndUser(team, targetUser)) {
             throw new IllegalArgumentException("이미 팀원입니다.");
         }
 
         TeamMember teamMember = TeamMember.builder()
                 .team(team)
-                .user(user)
+                .user(targetUser)
                 .role(TeamMember.TeamRole.MEMBER)
                 .build();
 
         teamMemberRepository.save(teamMember);
+    }
+
+    // 팀 멤버인지 확인
+    public void validateTeamMember(Team team, User user) {
+        if (!teamMemberRepository.existsByTeamAndUser(team, user)) {
+            throw new IllegalArgumentException("해당 팀의 멤버가 아닙니다.");
+        }
+    }
+
+    // 팀장인지 확인
+    public void validateTeamOwner(Team team, User user) {
+        TeamMember teamMember = teamMemberRepository.findByTeamAndUser(team, user)
+                .orElseThrow(() -> new IllegalArgumentException("팀원이 아닙니다."));
+
+        if (teamMember.getRole() != TeamMember.TeamRole.OWNER) {
+            throw new IllegalArgumentException("팀장만 가능한 작업입니다.");
+        }
     }
 
     // 팀 조회

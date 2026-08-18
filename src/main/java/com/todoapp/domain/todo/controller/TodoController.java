@@ -29,8 +29,15 @@ public class TodoController {
 
     // 투두 목록 페이지
     @GetMapping
-    public String todoList(@PathVariable Long teamId, Model model) {
+    public String todoList(@PathVariable Long teamId,
+                           @AuthenticationPrincipal UserDetails userDetails,
+                           Model model) {
         Team team = teamService.findById(teamId);
+        User user = userService.findByEmail(userDetails.getUsername());
+
+        // 팀 멤버인지 확인
+        teamService.validateTeamMember(team, user);
+
         List<TodoResponse> todos = todoService.findByTeam(team)
                 .stream()
                 .map(TodoResponse::new)
@@ -42,7 +49,15 @@ public class TodoController {
 
     // 투두 생성 페이지
     @GetMapping("/new")
-    public String createTodoPage(@PathVariable Long teamId, Model model) {
+    public String createTodoPage(@PathVariable Long teamId,
+                                 @AuthenticationPrincipal UserDetails userDetails,
+                                 Model model) {
+        Team team = teamService.findById(teamId);
+        User user = userService.findByEmail(userDetails.getUsername());
+
+        // 팀 멤버인지 확인
+        teamService.validateTeamMember(team, user);
+
         model.addAttribute("todoRequest", new TodoRequest());
         model.addAttribute("teamId", teamId);
         model.addAttribute("priorities", Todo.Priority.values());
@@ -56,6 +71,10 @@ public class TodoController {
                              @AuthenticationPrincipal UserDetails userDetails) {
         Team team = teamService.findById(teamId);
         User createdBy = userService.findByEmail(userDetails.getUsername());
+
+        // 팀 멤버인지 확인
+        teamService.validateTeamMember(team, createdBy);
+
         User assignedTo = todoRequest.getAssignedToId() != null
                 ? userService.findById(todoRequest.getAssignedToId()) : null;
 
@@ -68,7 +87,15 @@ public class TodoController {
     // 투두 상세 페이지
     @GetMapping("/{todoId}")
     public String todoDetail(@PathVariable Long teamId,
-                             @PathVariable Long todoId, Model model) {
+                             @PathVariable Long todoId,
+                             @AuthenticationPrincipal UserDetails userDetails,
+                             Model model) {
+        Team team = teamService.findById(teamId);
+        User user = userService.findByEmail(userDetails.getUsername());
+
+        // 팀 멤버인지 확인
+        teamService.validateTeamMember(team, user);
+
         Todo todo = todoService.findById(todoId);
         model.addAttribute("todo", new TodoResponse(todo));
         model.addAttribute("teamId", teamId);
@@ -80,15 +107,29 @@ public class TodoController {
     @PostMapping("/{todoId}/status")
     public String updateStatus(@PathVariable Long teamId,
                                @PathVariable Long todoId,
-                               @RequestParam Todo.Status status) {
+                               @RequestParam Todo.Status status,
+                               @AuthenticationPrincipal UserDetails userDetails) {
+        Team team = teamService.findById(teamId);
+        User user = userService.findByEmail(userDetails.getUsername());
+
+        // 팀 멤버인지 확인
+        teamService.validateTeamMember(team, user);
+
         todoService.updateStatus(todoId, status);
         return "redirect:/teams/" + teamId + "/todos/" + todoId;
     }
 
-    // 투두 삭제
+    // 투두 삭제 (팀장만 가능)
     @PostMapping("/{todoId}/delete")
     public String deleteTodo(@PathVariable Long teamId,
-                             @PathVariable Long todoId) {
+                             @PathVariable Long todoId,
+                             @AuthenticationPrincipal UserDetails userDetails) {
+        Team team = teamService.findById(teamId);
+        User user = userService.findByEmail(userDetails.getUsername());
+
+        // 팀장인지 확인
+        teamService.validateTeamOwner(team, user);
+
         todoService.deleteTodo(todoId);
         return "redirect:/teams/" + teamId + "/todos";
     }

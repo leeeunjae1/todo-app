@@ -55,20 +55,31 @@ public class TeamController {
 
     // 팀 상세 페이지
     @GetMapping("/{teamId}")
-    public String teamDetail(@PathVariable Long teamId, Model model) {
+    public String teamDetail(@PathVariable Long teamId,
+                             @AuthenticationPrincipal UserDetails userDetails,
+                             Model model) {
         Team team = teamService.findById(teamId);
+        User user = userService.findByEmail(userDetails.getUsername());
+
+        // 팀 멤버인지 확인
+        teamService.validateTeamMember(team, user);
+
         model.addAttribute("team", new TeamResponse(team));
         model.addAttribute("members", teamService.findTeamMembers(team));
         return "team/detail";
     }
 
-    // 팀원 초대 처리
+    // 팀원 초대 처리 (팀장만 가능)
     @PostMapping("/{teamId}/invite")
     public String inviteMember(@PathVariable Long teamId,
-                               @ModelAttribute InviteRequest inviteRequest) {
+                               @ModelAttribute InviteRequest inviteRequest,
+                               @AuthenticationPrincipal UserDetails userDetails) {
         Team team = teamService.findById(teamId);
-        User user = userService.findByEmail(inviteRequest.getEmail());
-        teamService.inviteMember(team, user);
+        User requestUser = userService.findByEmail(userDetails.getUsername());
+        User targetUser = userService.findByEmail(inviteRequest.getEmail());
+
+        // 팀장인지 확인 후 초대
+        teamService.inviteMember(team, requestUser, targetUser);
         return "redirect:/teams/" + teamId;
     }
 }
