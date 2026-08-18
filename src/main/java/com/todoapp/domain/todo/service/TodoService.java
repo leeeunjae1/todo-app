@@ -75,7 +75,7 @@ public class TodoService {
 
     // 팀의 투두 목록 조회
     public List<Todo> findByTeam(Team team) {
-        return todoRepository.findByTeam(team);
+        return todoRepository.findByTeamWithUsers(team);
     }
 
     // 담당자별 투두 목록 조회

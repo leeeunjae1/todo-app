@@ -10,7 +10,11 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "todos")
+@Table(name = "todos", indexes = {
+        @Index(name = "idx_todo_team", columnList = "team_id"),
+        @Index(name = "idx_todo_assigned_to", columnList = "assigned_to"),
+        @Index(name = "idx_todo_due_date", columnList = "due_date")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
