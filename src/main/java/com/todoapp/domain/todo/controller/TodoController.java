@@ -34,8 +34,6 @@ public class TodoController {
                            Model model) {
         Team team = teamService.findById(teamId);
         User user = userService.findByEmail(userDetails.getUsername());
-
-        // 팀 멤버인지 확인
         teamService.validateTeamMember(team, user);
 
         List<TodoResponse> todos = todoService.findByTeam(team)
@@ -54,13 +52,12 @@ public class TodoController {
                                  Model model) {
         Team team = teamService.findById(teamId);
         User user = userService.findByEmail(userDetails.getUsername());
-
-        // 팀 멤버인지 확인
         teamService.validateTeamMember(team, user);
 
         model.addAttribute("todoRequest", new TodoRequest());
         model.addAttribute("teamId", teamId);
         model.addAttribute("priorities", Todo.Priority.values());
+        model.addAttribute("members", teamService.findTeamMembers(team));
         return "todo/create";
     }
 
@@ -71,8 +68,6 @@ public class TodoController {
                              @AuthenticationPrincipal UserDetails userDetails) {
         Team team = teamService.findById(teamId);
         User createdBy = userService.findByEmail(userDetails.getUsername());
-
-        // 팀 멤버인지 확인
         teamService.validateTeamMember(team, createdBy);
 
         User assignedTo = todoRequest.getAssignedToId() != null
@@ -92,14 +87,13 @@ public class TodoController {
                              Model model) {
         Team team = teamService.findById(teamId);
         User user = userService.findByEmail(userDetails.getUsername());
-
-        // 팀 멤버인지 확인
         teamService.validateTeamMember(team, user);
 
         Todo todo = todoService.findById(todoId);
         model.addAttribute("todo", new TodoResponse(todo));
         model.addAttribute("teamId", teamId);
         model.addAttribute("statuses", Todo.Status.values());
+        model.addAttribute("members", teamService.findTeamMembers(team));
         return "todo/detail";
     }
 
@@ -111,8 +105,6 @@ public class TodoController {
                                @AuthenticationPrincipal UserDetails userDetails) {
         Team team = teamService.findById(teamId);
         User user = userService.findByEmail(userDetails.getUsername());
-
-        // 팀 멤버인지 확인
         teamService.validateTeamMember(team, user);
 
         todoService.updateStatus(todoId, status);
@@ -126,8 +118,6 @@ public class TodoController {
                              @AuthenticationPrincipal UserDetails userDetails) {
         Team team = teamService.findById(teamId);
         User user = userService.findByEmail(userDetails.getUsername());
-
-        // 팀장인지 확인
         teamService.validateTeamOwner(team, user);
 
         todoService.deleteTodo(todoId);
