@@ -30,7 +30,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/auth/**", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/", "/auth/**", "/css/**", "/js/**", "/notifications/subscribe").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
