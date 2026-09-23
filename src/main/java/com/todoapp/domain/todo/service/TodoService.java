@@ -1,5 +1,7 @@
 package com.todoapp.domain.todo.service;
 
+import com.todoapp.domain.notification.entity.Notification;
+import com.todoapp.domain.notification.service.NotificationService;
 import com.todoapp.domain.team.entity.Team;
 import com.todoapp.domain.todo.entity.Todo;
 import com.todoapp.domain.todo.repository.TodoRepository;
@@ -17,6 +19,7 @@ import java.util.List;
 public class TodoService {
 
     private final TodoRepository todoRepository;
+    private final NotificationService notificationService;
 
     // 투두 생성
     @Transactional
@@ -35,14 +38,25 @@ public class TodoService {
                 .createdBy(createdBy)
                 .build();
 
-        return todoRepository.save(todo).getId();
+        todoRepository.save(todo);
+
+        // 담당자 지정 알림 발송
+        if (assignedTo != null && !assignedTo.getEmail().equals(createdBy.getEmail())) {
+            notificationService.createNotification(
+                    assignedTo,
+                    todo,
+                    Notification.NotificationType.ASSIGNED,
+                    "[담당자 지정] " + title + " 투두의 담당자로 지정되었습니다."
+            );
+        }
+
+        return todo.getId();
     }
 
     // 투두 수정
     @Transactional
     public void updateTodo(Long todoId, String title, String content,
                            Todo.Priority priority, LocalDateTime dueDate) {
-
         Todo todo = findById(todoId);
         todo.update(title, content, priority, dueDate);
     }
