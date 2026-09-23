@@ -1,1 +1,55 @@
-# todo-app
+팀 협업 투두 웹 애플리케이션
+
+팀원끼리 할 일을 공유하고 실시간으로 협업하는 웹 서비스입니다. 팀을 생성하고 팀원을 초대해서 투두를 함께 관리할 수 있으며, 담당자 지정 및 댓글 작성 시 실시간 알림을 받을 수 있습니다.
+
+배포 URL: https://todo-app-production-7fd1.up.railway.app
+
+기술 스택
+항목	기술
+Language	Java 21
+Framework	Spring Boot 3.5
+Frontend	Thymeleaf
+Database	MySQL
+ORM	Spring Data JPA
+실시간 알림	SSE (Server-Sent Events)
+인증	JWT
+배포	Railway
+CI/CD	GitHub Actions
+개발 도구	IntelliJ IDEA, GitHub
+주요 기능
+
+회원가입 / 로그인
+JWT 토큰 기반 인증을 구현했습니다. 로그인 성공 시 JWT 토큰을 발급하고 쿠키에 저장해 이후 요청에서 인증을 처리합니다.
+
+팀 생성 및 팀원 초대
+팀을 생성하면 생성자는 자동으로 팀장이 됩니다. 팀장만 팀원을 초대할 수 있으며 팀원은 해당 팀의 투두를 조회하고 관리할 수 있습니다.
+
+투두 CRUD
+팀 단위로 투두를 생성하고 관리합니다. 담당자 지정, 마감일 설정, 우선순위(LOW/MEDIUM/HIGH) 설정이 가능하며 상태(PENDING/IN_PROGRESS/DONE)를 변경할 수 있습니다.
+
+실시간 알림
+SSE(Server-Sent Events) 방식으로 실시간 알림을 구현했습니다. 투두 담당자로 지정되거나 댓글이 달리면 즉시 알림을 받을 수 있습니다.
+
+배치 스케줄러
+Spring Scheduler를 활용해 매일 오전 9시에 마감일이 임박한 투두의 담당자에게 자동으로 알림을 발송합니다.
+
+쿼리 최적화
+N+1 문제를 fetch join으로 해결하고 자주 조회하는 컬럼(team_id, assigned_to, due_date)에 인덱스를 적용해 조회 성능을 개선했습니다.
+
+권한 관리
+기능	팀장	팀원
+팀원 초대	O	X
+투두 생성	O	O
+투두 삭제	O	X
+상태 변경	O	O
+댓글 작성	O	O
+본인 댓글 삭제	O	O
+트러블슈팅
+
+1. WebSocket → SSE 변경
+
+처음에 실시간 알림을 WebSocket으로 구현했습니다. 그러나 알림 기능은 서버에서 클라이언트로 단방향 통신만 필요한데 WebSocket은 양방향 통신이라 오버스펙이었습니다. 실무에서도 동일한 이유로 WebSocket에서 SSE로 전환하는 케이스를 경험했고 이를 프로젝트에 적용했습니다. SSE는 HTTP 기반으로 구현이 간단하고 자동 재연결을 지원하며 단방향 통신에 더 적합합니다.
+
+2. N+1 문제 해결
+
+팀 투두 목록을 조회할 때 투두 하나당 담당자와 생성자를 조회하는 쿼리가 추가로 발생하는 N+1 문제가 있었습니다. fetch join을 적용해 투두와 연관된 유저 정보를 한 번의 쿼리로 함께 조회하도록 개선했습니다.
