@@ -5,7 +5,7 @@ import com.todoapp.domain.notification.entity.Notification;
 import com.todoapp.domain.notification.repository.NotificationRepository;
 import com.todoapp.domain.todo.entity.Todo;
 import com.todoapp.domain.user.entity.User;
-import com.todoapp.global.security.WebSocketHandler;
+import com.todoapp.global.security.SseEmitterManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,9 +18,9 @@ import java.util.List;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
-    private final WebSocketHandler webSocketHandler;
+    private final SseEmitterManager sseEmitterManager;
 
-    // 알림 생성 + WebSocket 전송
+    // 알림 생성 + SSE 전송
     @Transactional
     public void createNotification(User user, Todo todo,
                                    Notification.NotificationType type, String message) {
@@ -35,8 +35,8 @@ public class NotificationService {
 
         notificationRepository.save(notification);
 
-        // WebSocket으로 실시간 알림 전송
-        webSocketHandler.sendNotification(user.getEmail(), new NotificationResponse(notification));
+        // SSE로 실시간 알림 전송
+        sseEmitterManager.sendNotification(user.getEmail(), new NotificationResponse(notification));
     }
 
     // 알림 읽음 처리
