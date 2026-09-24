@@ -1,5 +1,7 @@
 package com.todoapp.domain.todo.controller;
 
+import com.todoapp.domain.comment.dto.CommentResponse;
+import com.todoapp.domain.comment.service.CommentService;
 import com.todoapp.domain.team.entity.Team;
 import com.todoapp.domain.team.service.TeamService;
 import com.todoapp.domain.todo.dto.TodoRequest;
@@ -26,6 +28,7 @@ public class TodoController {
     private final TodoService todoService;
     private final TeamService teamService;
     private final UserService userService;
+    private final CommentService commentService;
 
     // 투두 목록 페이지
     @GetMapping
@@ -90,10 +93,16 @@ public class TodoController {
         teamService.validateTeamMember(team, user);
 
         Todo todo = todoService.findById(todoId);
+        List<CommentResponse> comments = commentService.findByTodo(todo)
+                .stream()
+                .map(CommentResponse::new)
+                .collect(Collectors.toList());
+
         model.addAttribute("todo", new TodoResponse(todo));
         model.addAttribute("teamId", teamId);
         model.addAttribute("statuses", Todo.Status.values());
         model.addAttribute("members", teamService.findTeamMembers(team));
+        model.addAttribute("comments", comments);
         return "todo/detail";
     }
 
